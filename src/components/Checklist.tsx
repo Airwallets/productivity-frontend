@@ -6,14 +6,14 @@ import { Checkbox } from "./ui/checkbox"
 import { ExternalLink, MessageSquare, Calendar, Clock } from "lucide-react"
 
 interface Task {
-  id: string
+  task_id: string
   title: string
-  description: string
-  priority: "high" | "medium" | "low"
-  dueDate: string
+  task_description: string
+  task_priority: "high" | "medium" | "low"
+  due_date: string
   completed: boolean
-  emailId?: string
-  createdAt: string
+  email_id?: string
+  created_at: string
 }
 
 const mockTasks: Task[] = [
@@ -76,7 +76,7 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
 
   const toggleTask = (taskId: string) => {
     setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, completed: !task.completed } : task
+      task.task_id === taskId ? { ...task, completed: !task.completed } : task
     ))
   }
 
@@ -169,13 +169,13 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
             <CardContent>
               <div className="space-y-4">
                 {incompleteTasks.map((task) => {
-                  const dueDateInfo = getDueDateStatus(task.dueDate)
+                  const dueDateInfo = getDueDateStatus(task.due_date)
                   return (
-                    <div key={task.id} className="border rounded-lg p-4">
+                    <div key={task.task_id} className="border rounded-lg p-4">
                       <div className="flex items-start space-x-3">
                         <Checkbox
                           checked={task.completed}
-                          onCheckedChange={() => toggleTask(task.id)}
+                          onCheckedChange={() => toggleTask(task.task_id)}
                           className="mt-1"
                         />
                         
@@ -185,14 +185,14 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
                             <div className="flex items-center space-x-2">
                               <Badge 
                                 variant="secondary" 
-                                className={getPriorityColor(task.priority)}
+                                className={getPriorityColor(task.task_priority)}
                               >
-                                {task.priority}
+                                {task.task_priority}
                               </Badge>
                             </div>
                           </div>
                           
-                          <p className="text-sm text-muted-foreground">{task.description}</p>
+                          <p className="text-sm text-muted-foreground">{task.task_description}</p>
                           
                           <div className="flex items-center justify-between">
                             <span className={`text-xs ${dueDateInfo.color}`}>
@@ -200,11 +200,11 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
                             </span>
                             
                             <div className="flex items-center space-x-2">
-                              {task.emailId && (
+                              {task.email_id && (
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => openGmail(task.emailId)}
+                                  onClick={() => openGmail(task.email_id)}
                                   className="flex items-center space-x-1"
                                 >
                                   <ExternalLink className="h-3 w-3" />
@@ -217,7 +217,7 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
                                 variant="outline"
                                 onClick={() => onOpenChat({ 
                                   type: "task", 
-                                  id: task.id, 
+                                  id: task.task_id, 
                                   data: task 
                                 })}
                                 className="flex items-center space-x-1"
@@ -245,11 +245,11 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
             <CardContent>
               <div className="space-y-4">
                 {completedTasks.map((task) => (
-                  <div key={task.id} className="border rounded-lg p-4 opacity-75">
+                  <div key={task.task_id} className="border rounded-lg p-4 opacity-75">
                     <div className="flex items-start space-x-3">
                       <Checkbox
                         checked={task.completed}
-                        onCheckedChange={() => toggleTask(task.id)}
+                        onCheckedChange={() => toggleTask(task.task_id)}
                         className="mt-1"
                       />
                       
@@ -261,7 +261,7 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
                           </Badge>
                         </div>
                         
-                        <p className="text-sm text-muted-foreground">{task.description}</p>
+                        <p className="text-sm text-muted-foreground">{task.task_description}</p>
                         
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-gray-500">
@@ -269,11 +269,11 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
                           </span>
                           
                           <div className="flex items-center space-x-2">
-                            {task.emailId && (
+                            {task.email_id && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => openGmail(task.emailId)}
+                                onClick={() => openGmail(task.email_id)}
                                 className="flex items-center space-x-1"
                               >
                                 <ExternalLink className="h-3 w-3" />
@@ -286,7 +286,7 @@ export function Checklist({ onOpenChat }: ChecklistProps) {
                               variant="outline"
                               onClick={() => onOpenChat({ 
                                 type: "task", 
-                                id: task.id, 
+                                id: task.task_id, 
                                 data: task 
                               })}
                               className="flex items-center space-x-1"
