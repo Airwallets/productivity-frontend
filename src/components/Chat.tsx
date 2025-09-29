@@ -20,6 +20,9 @@ export function Chat({ context }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+
+  const threadIdRef = useRef("0")
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -31,6 +34,7 @@ export function Chat({ context }: ChatProps) {
   }, [messages])
 
   useEffect(() => {
+    threadIdRef.current = Math.floor(Math.random() * 10000000).toString()
     // Initialize chat with context if provided
     if (context.type && context.id) {
       const welcomeMessage: Message = {
@@ -41,14 +45,31 @@ export function Chat({ context }: ChatProps) {
       }
       setMessages([welcomeMessage])
     } else {
-      // General welcome message
-      const welcomeMessage: Message = {
-        id: `msg-${Date.now()}`,
-        type: "assistant",
-        content: "Hello! I'm your AI assistant. I can help you with email management, creating invoices, scheduling, and more. What would you like to do today?",
-        timestamp: new Date()
-      }
-      setMessages([welcomeMessage])
+      setIsLoading(true)
+      fetch("http://localhost:3000/chatbot/query", { 
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }, 
+          body: JSON.stringify({
+            message: "Hi",
+            resume: false,
+            thread_id: threadIdRef.current
+          }),
+          credentials: "include"
+      }).then(async response => {
+        // General welcome message
+        var responseBody = await response.json()
+        const welcomeMessage: Message = {
+          id: `msg-${Date.now()}`,
+          type: "assistant",
+          content: responseBody,
+          timestamp: new Date()
+        }
+        setMessages([welcomeMessage])
+
+        setIsLoading(false)
+      }) 
     }
   }, [context])
 
@@ -75,19 +96,29 @@ export function Chat({ context }: ChatProps) {
     setInput("")
     setIsLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(input, context)
-      const assistantMessage: Message = {
-        id: `msg-${Date.now() + 1}`,
-        type: "assistant",
-        content: aiResponse,
-        timestamp: new Date()
-      }
-      
-      setMessages(prev => [...prev, assistantMessage])
-      setIsLoading(false)
-    }, 1000 + Math.random() * 1000)
+   var response = await fetch("http://localhost:3000/chatbot/query", { 
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }, 
+        body: JSON.stringify({
+          message: userMessage.content,
+          resume: true,
+          thread_id: threadIdRef.current
+        }),
+        credentials: "include"
+    })
+
+    var responseBody = await response.json()
+    const aiMessage: Message = {
+      id: `msg-${Date.now()}`,
+      type: "assistant",
+      content: responseBody,
+      timestamp: new Date()
+    }
+    setMessages(prev => [...prev, aiMessage])
+
+    setIsLoading(false)
   }
 
   const generateAIResponse = (userInput: string, ctx: { type?: string; id?: string; data?: any }) => {
