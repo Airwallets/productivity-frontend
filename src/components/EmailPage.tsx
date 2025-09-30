@@ -31,7 +31,7 @@ export function EmailPage({ onOpenChat }: EmailPageProps) {
   const [emails, setEmails] = useState<Email[]>([])
 
   useEffect(() => {
-    fetch("http://localhost:3000/emails", { method: "GET", credentials: "include" }).then(async (response) => {
+    fetch("http://localhost:3000/emails/get_emails", { method: "POST", credentials: "include" }).then(async (response) => {
       var responseBody = await response.json()
       setEmails(responseBody)
     })
@@ -54,8 +54,8 @@ export function EmailPage({ onOpenChat }: EmailPageProps) {
     window.open("https://mail.google.com", "_blank")
   }
 
-  const selectEmail = (email: Email) => {
-    fetch("http://localhost:3000/emails/gen_ai_summary", { 
+  const selectEmail = async (email: Email) => {
+    var prom1 = fetch("http://localhost:3000/emails/gen_ai_summary", { 
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -66,9 +66,10 @@ export function EmailPage({ onOpenChat }: EmailPageProps) {
       credentials: "include"
     }).then(async response => {
       var responseBody = await response.json()
+      console.log(responseBody)
       email.summary = responseBody.summary
     })
-    fetch("http://localhost:3000/emails/gen_ai_draft", { 
+    var prom2 = fetch("http://localhost:3000/emails/gen_ai_draft", { 
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -79,9 +80,12 @@ export function EmailPage({ onOpenChat }: EmailPageProps) {
       credentials: "include"
     }).then(async response => {
       var responseBody = await response.json()
+      console.log(responseBody)
       email.draft_subject = responseBody.draft_subject
       email.draft_response = responseBody.draft_body
     })
+    await prom1
+    await prom2
     setSelectedEmail(email)
   }
 
@@ -188,7 +192,8 @@ export function EmailPage({ onOpenChat }: EmailPageProps) {
 
                 <div>
                   <h4>Generated Task:</h4>
-                  <p className="text-sm text-muted-foreground">{selectedEmail.task}</p>
+                  {/* <p className="text-sm text-muted-foreground">{selectedEmail.task} </p> */}
+                  <p className="text-sm text-muted-foreground"> Schedule meeting with manager at 3pm </p>
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-4">
