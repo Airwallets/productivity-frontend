@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
@@ -10,17 +10,16 @@ import { format } from "date-fns"
 
 interface Email {
   email_id: string
+  email_subject: string
   from_sender: string
   email_status: "unread" | "read" | "replied"
   email_timestamp: string
   full_content: string
   summary: string
+  draft_subject?: string
   draft_response: string
   task: string
 }
-
-const mockEmails: Email[] = [
-]
 
 interface EmailPageProps {
   onOpenChat: (context: { type: string; id: string; data: any }) => void
@@ -29,7 +28,14 @@ interface EmailPageProps {
 export function EmailPage({ onOpenChat }: EmailPageProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null)
-  const [emails] = useState<Email[]>(mockEmails)
+  const [emails, setEmails] = useState<Email[]>([])
+
+  useEffect(() => {
+    fetch("http://localhost:3000/emails", { method: "GET", credentials: "include" }).then(async (response) => {
+      var responseBody = await response.json()
+      setEmails(responseBody)
+    })
+  }, [])
 
   const addToChecklist = (task: string, emailId: string) => {
     // In a real app, this would add to a checklist store/database
@@ -46,6 +52,37 @@ export function EmailPage({ onOpenChat }: EmailPageProps) {
   const openGmail = (emailId: string) => {
     // In a real app, this would open Gmail
     window.open("https://mail.google.com", "_blank")
+  }
+
+  const selectEmail = (email: Email) => {
+    fetch("http://localhost:3000/emails/gen_ai_summary", { 
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: email.full_content
+      }),
+      credentials: "include"
+    }).then(async response => {
+      var responseBody = await response.json()
+      email.summary = responseBody.summary
+    })
+    fetch("http://localhost:3000/emails/gen_ai_draft", { 
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: email.full_content
+      }),
+      credentials: "include"
+    }).then(async response => {
+      var responseBody = await response.json()
+      email.draft_subject = responseBody.draft_subject
+      email.draft_response = responseBody.draft_body
+    })
+    setSelectedEmail(email)
   }
 
   return (
@@ -85,12 +122,12 @@ export function EmailPage({ onOpenChat }: EmailPageProps) {
                 <div
                   key={email.email_id}
                   className="p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => setSelectedEmail(email)}
+                  onClick={() => selectEmail(email) }
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{email.email_status}</span>
+                      <span className="font-medium">{email.from_sender}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge 
@@ -102,7 +139,7 @@ export function EmailPage({ onOpenChat }: EmailPageProps) {
                       <span className="text-xs text-muted-foreground">{email.email_timestamp}</span>
                     </div>
                   </div>
-                  <h3 className="font-medium mb-1">Subject Line</h3>
+                  <h3 className="font-medium mb-1">{ email.email_subject }</h3>
                   <p className="text-sm text-muted-foreground line-clamp-2">Preview</p>
                 </div>
               ))}

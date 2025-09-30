@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
@@ -16,63 +16,22 @@ interface Task {
   created_at: string
 }
 
-const mockTasks: Task[] = [
-  {
-    id: "task-1",
-    title: "Schedule meeting with John to discuss Q4 budget concerns",
-    description: "Follow up on John's questions about marketing allocation and IT infrastructure budget",
-    priority: "high",
-    dueDate: "2024-01-16",
-    completed: false,
-    emailId: "email-1",
-    createdAt: "2024-01-15"
-  },
-  {
-    id: "task-2",
-    title: "Schedule call with Sarah to discuss revised project timeline",
-    description: "Client needs to delay project by 2 weeks due to dependencies",
-    priority: "high",
-    dueDate: "2024-01-16",
-    completed: false,
-    emailId: "email-2",
-    createdAt: "2024-01-15"
-  },
-  {
-    id: "task-3",
-    title: "Review action items from team meeting and coordinate with IT team",
-    description: "Follow up on infrastructure assessment for new projects",
-    priority: "medium",
-    dueDate: "2024-01-18",
-    completed: true,
-    emailId: "email-3",
-    createdAt: "2024-01-15"
-  },
-  {
-    id: "task-4",
-    title: "Prepare monthly performance report",
-    description: "Compile data from all departments for monthly review",
-    priority: "medium",
-    dueDate: "2024-01-20",
-    completed: false,
-    createdAt: "2024-01-14"
-  },
-  {
-    id: "task-5",
-    title: "Follow up on client contract renewal",
-    description: "Contract expires end of month, need to start renewal process",
-    priority: "low",
-    dueDate: "2024-01-25",
-    completed: false,
-    createdAt: "2024-01-13"
-  }
-]
-
 interface ChecklistProps {
   onOpenChat: (context: { type: string; id: string; data: any }) => void
 }
 
 export function Checklist({ onOpenChat }: ChecklistProps) {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks)
+  const [tasks, setTasks] = useState<Task[]>([])
+
+  useEffect(() => {
+    fetch("http://localhost:3000/task", {
+      method: "GET",
+      credentials: "include"  
+    }).then(async response => {
+      var responseBody = await response.json()
+      setTasks(responseBody)
+    })
+  }, [])
 
   const toggleTask = (taskId: string) => {
     setTasks(tasks.map(task => 
